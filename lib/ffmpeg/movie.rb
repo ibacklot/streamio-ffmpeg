@@ -1,15 +1,13 @@
 require 'time'
 
 module FFMPEG
-  class Movie
+  class BaseMovie
     attr_reader :path, :duration, :time, :bitrate, :rotation, :creation_time
     attr_reader :video_stream, :video_codec, :video_bitrate, :colorspace, :resolution, :sar, :dar
     attr_reader :audio_stream, :audio_codec, :audio_bitrate, :audio_sample_rate
     attr_reader :container
 
     def initialize(path)
-      raise Errno::ENOENT, "the file '#{path}' does not exist" unless File.exists?(path)
-
       @path = path
 
       # ffmpeg will output to stderr
@@ -131,6 +129,19 @@ module FFMPEG
       output[/test/] # Running a regexp on the string throws error if it's not UTF-8
     rescue ArgumentError
       output.force_encoding("ISO-8859-1")
+    end
+  end
+
+  class Movie < BaseMovie
+    def initialize(path)
+      raise Errno::ENOENT, "the file '#{path}' does not exist" unless File.exists?(path)
+      super
+    end
+  end
+
+  class S3Movie < BaseMovie
+    def initialize(s3_uri)
+      super(s3_uri.to_s)
     end
   end
 end
